@@ -28,15 +28,25 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // await client.connect();
+    const userCollection = client.db("shiningDB").collection('users');
     const menuCollection = client.db("shiningDB").collection('menu');
     const reviewCollection = client.db("shiningDB").collection('reviews');
     const cartCollection = client.db("shiningDB").collection('carts');
 
+    // ====== User =======
+    app.post('/users', async (req,res)=>{
+      const newUser = req.body;
+      const result = await userCollection.insertOne(newUser)
+      res.send(result)
+    })
+
+    // ===== Menu =========
     app.get('/menu', async (req,res)=>{
         const result = await menuCollection.find().toArray()
         res.send(result)
     })
 
+    // =========== review =======
     app.get('/reviews', async (req,res)=>{
         const result = await reviewCollection.find().toArray()
         res.send(result)
