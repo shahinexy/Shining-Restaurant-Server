@@ -32,21 +32,32 @@ async function run() {
     const cartCollection = client.db("shiningDB").collection('carts');
 
     // JWT related api
-    app.post('/jwt', async (req, res)=>{
+    app.post('/jwt', async (req, res) => {
       const user = req.body;
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'})
-      res.send({token})
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+      res.send({ token })
     })
 
     // midlewear
-    const verifyToken = (req,res,next)=>{
-      console.log("inside verify token",req.headers);
-      next()
+    const verifyToken = (req, res, next) => {
+      console.log("inside verify token", req.headers.authoraization);
+      if (!req.headers.authoraization) {
+        return res.status(404).send({ message: 'forbidden access' })
+      }
+      const token = req.headers.authoraization.split(' ')[1];
+
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+          return res.status(404).send({ message: 'forbidden access' })
+        }
+        req.decoded = decoded;
+        next()
+      })
     }
 
     // ====== User =======
-    app.get('/users', verifyToken, async (req,res)=>{
-      
+    app.get('/users', verifyToken, async (req, res) => {
+
       const result = await userCollection.find().toArray()
       res.send(result)
     })
@@ -62,11 +73,11 @@ async function run() {
       res.send(result)
     })
 
-    app.patch('/users/admin/:id', async (req,res)=>{
-      const filter = {_id: new ObjectId(req.params.id)}
+    app.patch('/users/admin/:id', async (req, res) => {
+      const filter = { _id: new ObjectId(req.params.id) }
       const updateUser = {
         $set: {
-          role : 'admin'
+          role: 'admin'
         }
       }
       const result = await userCollection.updateOne(filter, updateUser)
