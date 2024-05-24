@@ -38,8 +38,15 @@ async function run() {
       res.send({token})
     })
 
+    // midlewear
+    const verifyToken = (req,res,next)=>{
+      console.log("inside verify token",req.headers);
+      next()
+    }
+
     // ====== User =======
-    app.get('/users', async (req,res)=>{
+    app.get('/users', verifyToken, async (req,res)=>{
+      
       const result = await userCollection.find().toArray()
       res.send(result)
     })
