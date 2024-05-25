@@ -40,7 +40,7 @@ async function run() {
 
     // midlewear
     const verifyToken = (req, res, next) => {
-      console.log("inside verify token", req.headers.authoraization);
+      // console.log("inside verify token", req.headers.authoraization);
       if (!req.headers.authoraization) {
         return res.status(401).send({ message: 'unauthorize access' })
       }
@@ -123,6 +123,11 @@ async function run() {
     // ===== Menu =========
     app.get('/menu', async (req, res) => {
       const result = await menuCollection.find().toArray()
+      res.send(result)
+    })
+    app.post('/menu', verifyToken,verifyAmin, async (req,res)=>{
+      const newMenu = req.body;
+      const result = await menuCollection.insertOne(newMenu)
       res.send(result)
     })
 
