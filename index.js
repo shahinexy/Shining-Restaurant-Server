@@ -143,6 +143,28 @@ async function run() {
       res.send(result)
     })
 
+    app.patch('/menu/:id', async (req, res)=>{
+      const item = req.body
+      const id = req.params.id;
+      const filter = {
+        $or: [
+          { _id: new ObjectId(id) },
+          {_id : id}
+        ]
+      }
+      const updateItem = {
+        $set: {
+          name : item.name,
+          price : item.price,
+          category: item.category,
+          image: item.image,
+          recipe: item.recipe
+        }
+      }
+      const result = await menuCollection.updateOne(filter, updateItem)
+      res.send(result)
+    })
+
     app.delete('/menu/:id', verifyToken, verifyAmin, async (req, res) => {
       const id = req.params.id;
       const query = {
