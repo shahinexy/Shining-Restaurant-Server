@@ -131,6 +131,18 @@ async function run() {
       res.send(result)
     })
 
+    app.get('/menu/:id', async (req,res)=>{
+      const id = req.params.id;
+      const query = {
+        $or: [
+          { _id: new ObjectId(id) },
+          {_id : id}
+        ]
+      }
+      const result = await menuCollection.findOne(query)
+      res.send(result)
+    })
+
     app.delete('/menu/:id', verifyToken, verifyAmin, async (req, res) => {
       const id = req.params.id;
       const query = {
