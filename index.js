@@ -55,13 +55,13 @@ async function run() {
       })
     }
 
-    const verifyAmin = async (req,res, next)=>{
+    const verifyAmin = async (req, res, next) => {
       const email = req.decoded.email
-      const query = {email : email}
+      const query = { email: email }
       const user = await userCollection.findOne(query)
       let isAdmin = user?.role === 'admin';
-      if(!isAdmin){
-        return res.status(403).send({message: 'forbidden access'})
+      if (!isAdmin) {
+        return res.status(403).send({ message: 'forbidden access' })
       }
       next()
     }
@@ -74,20 +74,20 @@ async function run() {
     })
 
     // check is Admin
-    app.get('/users/admin/:email', verifyToken, async (req,res)=>{
-    const email = req.params.email;
-    if(email !== req.decoded.email){
-      return res.status(403).send({message: 'forbidden access'})
-    }
+    app.get('/users/admin/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
 
-    const query = {email : email}
-    const user = await userCollection.findOne(query)
-    let admin = false
-    if(user){
-      admin = user?.role === 'admin';
-    }
+      const query = { email: email }
+      const user = await userCollection.findOne(query)
+      let admin = false
+      if (user) {
+        admin = user?.role === 'admin';
+      }
 
-    res.send({admin})
+      res.send({ admin })
 
     })
 
@@ -125,12 +125,23 @@ async function run() {
       const result = await menuCollection.find().toArray()
       res.send(result)
     })
-    app.post('/menu', verifyToken,verifyAmin, async (req,res)=>{
+    app.post('/menu', verifyToken, verifyAmin, async (req, res) => {
       const newMenu = req.body;
       const result = await menuCollection.insertOne(newMenu)
       res.send(result)
     })
 
+    app.delete('/menu/:id', verifyToken, verifyAmin, async (req, res) => {
+      const id = req.params.id;
+      const query = {
+        $or: [
+          { _id: new ObjectId(id) },
+          {_id : id}
+        ]
+      }
+      const result = await menuCollection.deleteOne(query)
+      res.send(result)
+    })
     // =========== review =======
     app.get('/reviews', async (req, res) => {
       const result = await reviewCollection.find().toArray()
