@@ -31,6 +31,7 @@ async function run() {
     const menuCollection = client.db("shiningDB").collection('menu');
     const reviewCollection = client.db("shiningDB").collection('reviews');
     const cartCollection = client.db("shiningDB").collection('carts');
+    const paymentCollection = client.db("shiningDB").collection('payments');
 
     // JWT related api
     app.post('/jwt', async (req, res) => {
@@ -132,31 +133,31 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/menu/:id', async (req,res)=>{
+    app.get('/menu/:id', async (req, res) => {
       const id = req.params.id;
       const query = {
         $or: [
           { _id: new ObjectId(id) },
-          {_id : id}
+          { _id: id }
         ]
       }
       const result = await menuCollection.findOne(query)
       res.send(result)
     })
 
-    app.patch('/menu/:id', async (req, res)=>{
+    app.patch('/menu/:id', async (req, res) => {
       const item = req.body
       const id = req.params.id;
       const filter = {
         $or: [
           { _id: new ObjectId(id) },
-          {_id : id}
+          { _id: id }
         ]
       }
       const updateItem = {
         $set: {
-          name : item.name,
-          price : item.price,
+          name: item.name,
+          price: item.price,
           category: item.category,
           image: item.image,
           recipe: item.recipe
@@ -171,7 +172,7 @@ async function run() {
       const query = {
         $or: [
           { _id: new ObjectId(id) },
-          {_id : id}
+          { _id: id }
         ]
       }
       const result = await menuCollection.deleteOne(query)
@@ -205,12 +206,12 @@ async function run() {
     })
 
     // payment intent
-    app.post('/create-payment-intent', async (req,res)=>{
-      const {price} = req.body;
+    app.post('/create-payment-intent', async (req, res) => {
+      const { price } = req.body;
       const amoutn = parseInt(price * 100)
 
       const paymentIntent = await stripe.paymentIntents.create({
-        amoutn: amoutn,
+        amount: amoutn,
         currency: "usd",
         payment_method_types: ['card']
       })
@@ -218,6 +219,21 @@ async function run() {
       res.send({
         clientSecret: paymentIntent.client_secret,
       })
+    })
+
+    app.post('/paymens', async (req, res) => {
+      const payment = req.body;
+      const paymentResult = await paymentCollection.insertOne(payment);
+
+      const query = {
+        _id: {
+          $in: payment.cardIds.map(id => new ObjectId(id))
+        }
+      }
+      const deletedResult = await cartCollection.deleteMany(query)
+
+      console.log(payment);
+      res.send({ paymentResult, deletedResult })
     })
 
     await client.db("admin").command({ ping: 1 });
